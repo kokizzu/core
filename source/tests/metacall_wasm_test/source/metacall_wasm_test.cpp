@@ -22,6 +22,10 @@
 #include <metacall/metacall.h>
 #include <metacall/metacall_value.h>
 
+#if defined(__FreeBSD__)
+#include <csignal>
+#endif
+
 class metacall_wasm_test : public testing::Test
 {
 public:
@@ -154,7 +158,9 @@ TEST_F(metacall_wasm_test, Default)
 		ASSERT_EQ((double)4.0, (double)metacall_value_to_double(values[3]));
 		metacall_value_destroy(ret);
 
-#if defined(__FreeBSD__) || defined(__linux__)
+#if defined(__FreeBSD__)
+		ASSERT_EXIT(metacallht_s(handle, "trap", {}, 0), ::testing::KilledBySignal(SIGILL), ".*");
+#elif defined(__linux__)
 		ASSERT_EXIT((metacallht_s(handle, "trap", {}, 0), exit(0)), ::testing::ExitedWithCode(0), ".*");
 #endif
 	}
