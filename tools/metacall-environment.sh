@@ -391,6 +391,7 @@ sub_ruby(){
 					--enable-debug-env \
 					--disable-yjit \
 					--disable-install-doc \
+					--with-coroutine=${ARCHITECTURE} \
 					cflags="${BUILD_CFLAGS} -fno-omit-frame-pointer -DUSE_MN_THREADS=0 -DUSE_RUBY_DEBUG_LOG=1" \
 					ldflags="${BUILD_LDFLAGS} -fno-omit-frame-pointer" \
 					optflags="-O0" \
