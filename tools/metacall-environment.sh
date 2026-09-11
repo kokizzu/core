@@ -1156,6 +1156,10 @@ sub_clang(){
 			$SUDO_CMD update-alternatives --install /usr/bin/cc cc $CC 100
 			$SUDO_CMD update-alternatives --install /usr/bin/c++ c++ $CXX 100
 		fi
+	elif [ "${OPERATIVE_SYSTEM}" = "FreeBSD" ]; then
+		# Set Clang as default compiler (it comes preinstalled by default)
+		export CC="/usr/bin/clang"
+		export CXX="/usr/bin/clang++"
 	fi
 }
 
