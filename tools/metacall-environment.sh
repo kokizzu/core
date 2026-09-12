@@ -346,9 +346,12 @@ sub_python(){
 			# Remove the dot immediately after the third numeric component: 3.15.0.b2 -> 3.15.0b2
 			PYTHON_VERSION=$(printf '%s\n' "$PYTHON_PKG_VERSION" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\./\1/')
 
+			# Get major and minor version: 3.15.0b2 -> 3.15
+			PYTHON_VERSION_MAJOR_MINOR=$(printf '%s\n' "$PYTHON_VERSION" | sed -E 's/^([0-9]+\.[0-9]+).*/python\1/')
+
 			git clone --depth=1 --single-branch --branch "v${PYTHON_VERSION}" https://github.com/python/cpython.git
 			cd cpython
-			PYTHON_EXE="python3"
+			PYTHON_EXE="python${PYTHON_VERSION_MAJOR_MINOR}"
 	
 			# Define Python instrumentation
 			if [ $INSTALL_MEMCHECK = 1 ]; then
@@ -365,7 +368,7 @@ sub_python(){
 				export TSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0"
 				BUILD_FLAGS="--with-thread-sanitizer" # --disable-gil
 				BUILD_LDFLAGS="-fsanitize=thread"
-				# PYTHON_EXE="python3t"
+				# PYTHON_EXE="${PYTHON_EXE}t"
 			elif [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
 				export MSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0:poison_in_dtor=0"
 				BUILD_FLAGS="--with-memory-sanitizer --with-pydebug"
