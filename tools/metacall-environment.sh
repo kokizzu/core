@@ -373,8 +373,9 @@ sub_python(){
 			fi
 	
 			# Configure
-			export CFLAGS="-O0 -g3 -fno-omit-frame-pointer -fno-stack-protector -U_FORTIFY_SOURCE"
-			export LDFLAGS="-Wl,-rpath,/usr/local/lib ${BUILD_LDFLAGS}"
+			export CFLAGS="-O0 -g3 -fno-omit-frame-pointer -fno-stack-protector -U_FORTIFY_SOURCE $(pkg-config --cflags expat)"
+			export LDFLAGS="-Wl,-rpath,/usr/local/lib ${BUILD_LDFLAGS} $(pkg-config --libs-only-L expat)"
+
 			./configure \
 				--prefix=/usr/local \
 				--enable-shared \
