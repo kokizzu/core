@@ -335,7 +335,7 @@ sub_python(){
 	elif [ "${OPERATIVE_SYSTEM}" = "FreeBSD" ]; then
 		if [ $INSTALL_MEMCHECK = 1 ] || [ $INSTALL_ADDRESS_SANITIZER = 1 ] || [ $INSTALL_THREAD_SANITIZER = 1 ] || [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
 			# Search the FreeBSD package repository for Python and install build dependencies
-			PYTHON_PKG=$(pkg search -q -x '^python3[0-9]+$' | sort -V | tail -n 1)
+			PYTHON_PKG=$(pkg search -q -x '^python3' | sort -V | tail -n 1)
 			$SUDO_CMD pkg install -y git gdbm libffi expat
 			PYTHON_VERSION="${PYTHON_PKG#python}"
 			git clone --depth=1 --single-branch --branch "${PYTHON_VERSION}" https://github.com/python/cpython.git
