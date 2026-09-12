@@ -333,7 +333,82 @@ sub_python(){
 		pip3 install joblib
 		pip3 install scikit-learn
 	elif [ "${OPERATIVE_SYSTEM}" = "FreeBSD" ]; then
-		$SUDO_CMD pkg install -y python3
+		if [ $INSTALL_MEMCHECK = 1 ] || [ $INSTALL_ADDRESS_SANITIZER = 1 ] || [ $INSTALL_THREAD_SANITIZER = 1 ] || [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
+			# Search the FreeBSD package repository for Python and install build dependencies
+			PYTHON_PKG=$(pkg search -q -x '^python3[0-9]+$' | sort -V | tail -n 1)
+			$SUDO_CMD pkg install -y git gdbm libffi expat
+			PYTHON_VERSION="${PYTHON_PKG#python}"
+			git clone --depth=1 --single-branch --branch "${PYTHON_VERSION}" https://github.com/python/cpython.git
+			cd cpython
+			PYTHON_EXE="${PYTHON_PKG}"
+	
+			# Define Python instrumentation
+			if [ $INSTALL_MEMCHECK = 1 ]; then
+				sed -i '' 's|\/\* #define Py_USING_MEMORY_DEBUGGER \*\/|#define Py_USING_MEMORY_DEBUGGER|' Objects/obmalloc.c
+				BUILD_FLAGS="--with-valgrind"
+				BUILD_LDFLAGS=""
+				PYTHON_EXE="${PYTHON_PKG}"
+			elif [ $INSTALL_ADDRESS_SANITIZER = 1 ]; then
+				printf "leak:*libpython*" > ./asan.supp
+				export ASAN_OPTIONS="halt_on_error=0:use_sigaltstack=0:detect_leaks=0:suppressions=$(pwd)/asan.supp"
+				export UBSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0"
+				BUILD_FLAGS="--with-address-sanitizer --with-undefined-behavior-sanitizer --with-pydebug"
+				BUILD_LDFLAGS="-fsanitize=address -fsanitize=undefined"
+			elif [ $INSTALL_THREAD_SANITIZER = 1 ]; then
+				export TSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0"
+				BUILD_FLAGS="--with-thread-sanitizer" # --disable-gil
+				BUILD_LDFLAGS="-fsanitize=thread"
+				# PYTHON_EXE="${PYTHON_PKG}t"
+				PYTHON_EXE="${PYTHON_PKG}"
+			elif [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
+				export MSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0:poison_in_dtor=0"
+				BUILD_FLAGS="--with-memory-sanitizer --with-pydebug"
+				BUILD_LDFLAGS="-fsanitize=memory"
+			fi
+	
+			# Configure
+			export CFLAGS="-O0 -g3 -fno-omit-frame-pointer -fno-stack-protector -U_FORTIFY_SOURCE"
+			export LDFLAGS="-Wl,-rpath,/usr/local/lib ${BUILD_LDFLAGS}"
+			./configure \
+				--prefix=/usr/local \
+				--enable-shared \
+				--without-pymalloc \
+				--without-static-libpython \
+				--without-ensurepip \
+				--with-system-expat \
+				--with-system-ffi \
+				--with-dbmliborder=bdb:gdbm \
+				${BUILD_FLAGS}
+	
+			# Build and install
+			gmake -j$(sysctl -n hw.ncpu)
+			$SUDO_CMD gmake altinstall
+	
+			# Unset environment variables
+			unset ASAN_OPTIONS
+			unset UBSAN_OPTIONS
+			unset TSAN_OPTIONS
+			unset MSAN_OPTIONS
+			unset CFLAGS
+			unset LDFLAGS
+	
+			# Define python as the default one
+			$SUDO_CMD ln -sf "/usr/local/bin/${PYTHON_EXE}" /usr/bin/python3
+	
+			# Install Pip
+			fetch -qo- https://bootstrap.pypa.io/get-pip.py | python3
+	
+			# Bootstrap pip and install python test dependencies
+			$SUDO_CMD python3 -m pip install --upgrade \
+				requests \
+				setuptools \
+				wheel \
+				rsa
+			cd ..
+			rm -rf ./cpython
+		else
+			$SUDO_CMD pkg install -y python3
+		fi
 	fi
 }
 
