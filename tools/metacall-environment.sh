@@ -433,14 +433,7 @@ sub_ruby(){
 			# Download Ruby build dependencies
 			$SUDO_CMD pkg install -y ruby git gmake bison autoconf automake libyaml gmp openssl
 
-			# https://docs.ruby-lang.org/en/3.4/contributing/building_ruby_md.html#label-Building+with+Address+Sanitizer
-			# ASAN will not work properly on any currently released version of Ruby;
-			# the necessary support is currently only present on Ruby’s master branch
-			# (and the whole test suite passes only as of commit Revision 9d0a5148).
-			# git clone --depth=1 --single-branch --branch master https://github.com/ruby/ruby.git
-			# cd ruby
-			# git fetch --depth=1 origin 9d0a5148ae062a0481a4a18fbeb9cfd01dc10428
-			# git checkout 9d0a5148ae062a0481a4a18fbeb9cfd01dc10428
+			# Download Ruby source
 			git clone --depth 1 --single-branch --branch ruby_3_4 https://github.com/ruby/ruby.git
 			cd ruby
 
