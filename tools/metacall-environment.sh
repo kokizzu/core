@@ -337,17 +337,22 @@ sub_python(){
 			# Search the FreeBSD package repository for Python and install build dependencies
 			PYTHON_PKG=$(pkg search -q -x '^python3' | sort -V | tail -n 1)
 			$SUDO_CMD pkg install -y git gdbm libffi expat
-			PYTHON_VERSION="${PYTHON_PKG#python}"
+
+			# Get the Python version: python315-3.15.0.b2 -> 3.15.0.b2
+			PYTHON_PKG_VERSION="${PYTHON_PKG#*-}"
+
+			# Remove the dot immediately after the third numeric component: 3.15.0.b2 -> 3.15.0b2
+			PYTHON_VERSION=$(printf '%s\n' "$PYTHON_PKG_VERSION" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\./\1/')
+
 			git clone --depth=1 --single-branch --branch "${PYTHON_VERSION}" https://github.com/python/cpython.git
 			cd cpython
-			PYTHON_EXE="${PYTHON_PKG}"
+			PYTHON_EXE="python3"
 	
 			# Define Python instrumentation
 			if [ $INSTALL_MEMCHECK = 1 ]; then
 				sed -i '' 's|\/\* #define Py_USING_MEMORY_DEBUGGER \*\/|#define Py_USING_MEMORY_DEBUGGER|' Objects/obmalloc.c
 				BUILD_FLAGS="--with-valgrind"
 				BUILD_LDFLAGS=""
-				PYTHON_EXE="${PYTHON_PKG}"
 			elif [ $INSTALL_ADDRESS_SANITIZER = 1 ]; then
 				printf "leak:*libpython*" > ./asan.supp
 				export ASAN_OPTIONS="halt_on_error=0:use_sigaltstack=0:detect_leaks=0:suppressions=$(pwd)/asan.supp"
@@ -358,8 +363,7 @@ sub_python(){
 				export TSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0"
 				BUILD_FLAGS="--with-thread-sanitizer" # --disable-gil
 				BUILD_LDFLAGS="-fsanitize=thread"
-				# PYTHON_EXE="${PYTHON_PKG}t"
-				PYTHON_EXE="${PYTHON_PKG}"
+				# PYTHON_EXE="python3t"
 			elif [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
 				export MSAN_OPTIONS="halt_on_error=0:use_sigaltstack=0:poison_in_dtor=0"
 				BUILD_FLAGS="--with-memory-sanitizer --with-pydebug"
