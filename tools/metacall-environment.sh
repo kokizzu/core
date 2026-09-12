@@ -333,10 +333,12 @@ sub_python(){
 		pip3 install joblib
 		pip3 install scikit-learn
 	elif [ "${OPERATIVE_SYSTEM}" = "FreeBSD" ]; then
-		if [ $INSTALL_MEMCHECK = 1 ] || [ $INSTALL_ADDRESS_SANITIZER = 1 ] || [ $INSTALL_THREAD_SANITIZER = 1 ] || [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
+		# TODO: Implement other sanitizers instrumentation
+		# if [ $INSTALL_MEMCHECK = 1 ] || [ $INSTALL_ADDRESS_SANITIZER = 1 ] || [ $INSTALL_THREAD_SANITIZER = 1 ] || [ $INSTALL_MEMORY_SANITIZER = 1 ]; then
+		if [ $INSTALL_THREAD_SANITIZER = 1 ]; then
 			# Search the FreeBSD package repository for Python and install build dependencies
 			PYTHON_PKG=$(pkg search -q -x '^python3' | sort -V | tail -n 1)
-			$SUDO_CMD pkg install -y git gdbm libffi expat
+			$SUDO_CMD pkg install -y git pkgconf openssl readline sqlite3 libffi xz bzip2 gdbm expat2
 
 			# Get the Python version: python315-3.15.0.b2 -> 3.15.0.b2
 			PYTHON_PKG_VERSION="${PYTHON_PKG#*-}"
