@@ -33,7 +33,12 @@
 #include <vector>
 
 #if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(WIN64)
-#include <windows.h>
+using UINT = unsigned int;
+
+extern "C" __declspec(dllimport) UINT __stdcall GetConsoleOutputCP();
+extern "C" __declspec(dllimport) int __stdcall SetConsoleOutputCP(UINT wCodePageID);
+
+constexpr UINT CP_UTF8 = 65001;
 #endif
 
 /* Error messages */
