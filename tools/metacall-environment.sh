@@ -405,9 +405,8 @@ sub_python(){
 			$SUDO_CMD ln -sf "/usr/local/bin/${PYTHON_EXE}" /usr/bin/python3
 	
 			# Install Pip
-			ulimit -s unlimited
 			fetch https://bootstrap.pypa.io/get-pip.py
-			python3 get-pip.py --user --break-system-packages
+			sh -c "$SUDO_CMD ulimit -s unlimited; python3 get-pip.py --user --break-system-packages"
 			export PATH="$(python3 -m site --user-base)/bin:$PATH"
 	
 			# Bootstrap pip and install python test dependencies
