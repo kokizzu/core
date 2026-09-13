@@ -416,7 +416,7 @@ sub_python(){
 			#	wheel \
 			#	rsa
 			cd ..
-			rm -rf ./cpython
+			$SUDO_CMD rm -rf ./cpython
 		else
 			$SUDO_CMD pkg install -y python3
 		fi
