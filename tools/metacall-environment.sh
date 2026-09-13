@@ -349,9 +349,6 @@ sub_python(){
 			# Get major and minor version: 3.15.0b2 -> python3.15
 			PYTHON_EXE=$(printf '%s\n' "$PYTHON_VERSION" | sed -E 's/^([0-9]+\.[0-9]+).*/python\1/')
 
-			# Get major and minor version without dot: 3.15.0b2 -> py315-pip
-			PYTHON_PIP=$(printf '%s\n' "$PYTHON_VERSION" | sed -E 's/^([0-9]+)\.([0-9]+).*/py\1\2-pip/')
-
 			git clone --depth=1 --single-branch --branch "v${PYTHON_VERSION}" https://github.com/python/cpython.git
 			cd cpython
 	
@@ -408,7 +405,9 @@ sub_python(){
 			$SUDO_CMD ln -sf "/usr/local/bin/${PYTHON_EXE}" /usr/bin/python3
 	
 			# Install Pip
-			$SUDO_CMD pkg install -y ${PYTHON_PIP}
+			fetch https://bootstrap.pypa.io/get-pip.py
+			python3 get-pip.py --user --break-system-packages
+			export PATH="$(python3 -m site --user-base)/bin:$PATH"
 	
 			# Bootstrap pip and install python test dependencies
 			$SUDO_CMD python3 -m pip install --upgrade \
